@@ -224,13 +224,21 @@ class ImagickDriver implements ImageDriver
         return $color->format($colorFormat);
     }
 
-    public function save(?string $path = null): static
+    public function save(?string $path = null, string $format = null): static
     {
         if (! $path) {
             $path = $this->originalPath;
         }
+        
+        if ($pos = str_pos($path, ':', 0)) {
+            $format = substr($path, 0, $pos);
+        }
 
-        $extension = pathinfo($path, PATHINFO_EXTENSION);
+        $extension = $format ?: pathinfo($path, PATHINFO_EXTENSION);
+
+        if (!$pos && $format) {
+            $path = $format . ':' . $path;
+        }
 
         if (! in_array(strtoupper($extension), Imagick::queryFormats('*'))) {
             throw UnsupportedImageFormat::make($extension);
